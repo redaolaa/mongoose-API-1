@@ -1,5 +1,5 @@
 
-import Users, { validatePassword } from '../users'
+import Users, { validatePassword } from '../models/users'
 import {Request,Response} from 'express'
 import jwt from 'jsonwebtoken'
 

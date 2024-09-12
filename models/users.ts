@@ -1,5 +1,5 @@
 import mongoose from "mongoose"
-import bcrypt from 'bycrypt'
+import bcrypt from 'bcrypt'
 
 
 
@@ -13,7 +13,7 @@ const userSchema = new mongoose.Schema({
 //? second argument= a function with a required argument of next
 //? that you must call at the end
 userSchema.pre('save', function hashPassword(next) { 
-    console.log("users password" this.password)
+    console.log("users password", this.password)
 
     //! hashSync is a bcypt function
     //? first argumeny is our password we want to hash

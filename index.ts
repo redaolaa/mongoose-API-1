@@ -3,8 +3,8 @@
 import express from "express";
 import mongoose from "mongoose";
 import {Request, Response} from 'express'
-import {getFoods, getFoodById, createFood, deleteFood, updateFood, } from './dist/models/controllers/foodController'
-import {createUser, login} from './dist/models/controllers/userController'
+import {getFoods, getFoodById, createFood, deleteFood, updateFood, } from './controllers/foodController'
+import {createUser, login} from './controllers/userController'
 const app = express();
 
 

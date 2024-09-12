@@ -1,5 +1,5 @@
 
-import Foods from '../foods'
+import Foods from '../models/foods'
 import {Request,Response} from 'express'
 
 
