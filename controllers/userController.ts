@@ -1,48 +1,76 @@
+import Users from "../models/users";
+import { Request, Response } from "express";
+import { validatePassword, checkPasswords } from "../models/users";
+import formatValidationError from "../errors/validation";
+// ! import the jwt creation and verification utilities
+import jwt from "jsonwebtoken";
 
-import Users, { validatePassword } from '../models/users'
-import {Request,Response} from 'express'
-import jwt from 'jsonwebtoken'
-
-export const createUser = async (req: Request, res: Response) => {
-    try {
-    console.log("user has sent username", req.body);
-    const incomingUser = req.body;
-  
-    let savedUser = await Users.create(incomingUser);
-    console.log("just added username", savedUser)
-    ;
-    res.send(savedUser);
-    } catch (e) {
-      console.log(e)
-      res.send({ message:"sign up failed "})
+export const signup = async (req: Request, res: Response) => {
+  try {
+    if (checkPasswords(req.body.password, req.body.passwordConfirmation)) {
+      const user = await Users.create(req.body);
+      res.send(user);
+    } else {
+      res.status(400).send({
+        message: "Passwords do not match",
+        errors: { password: "Does not match password" },
+      });
     }
+  } catch (e) {
+    console.log(e);
+    res.status(400).send({
+      message: "There was an error",
+      errors: formatValidationError(e),
+    });
+  }
 };
-  
-export const login= async(req: Request,res: Response)=> {
-const incomingData= req.body
-const incomingUsername= req.body.username
-const incomingPassword = req.body.password
-//Check if user exists in the database. check if username belongs to exisitng user
-const foundUser= await Users.findOne({ username: incomingUsername})
-if (!foundUser) {
-    return res.send({message: "login fauled. user not found"})
-}
 
-// check if password is correct
+export const login = async (req: Request, res: Response) => {
+  try {
+    const incomingPassword = req.body.password;
+    const incomingEmail = req.body.email;
+    // check if email belongs to an existing user in our database
+    const foundUser = await Users.findOne({ email: incomingEmail });
 
-// hash the incoming password and match it to the actual password in users.ts
- const isValidPw:boolean = validatePassword(incomingPassword, foundUser.password)
-if (isValidPw){
+    if (!foundUser) {
+      return res.status(401).json({ message: "login failed. User not found" });
+    }
 
-// issues a unique jwt for this user
-    const token = jwt.sign(
-        {userID: foundUser._id, username: foundUser.username}, 
-        "this is a very secret string only we know", // a secret only srver knows 
-        {expiresIn: '24h'} // an expiry of the token
-    )
-    res.send({message: "login successful"})
-} else {
-    res.status(401).send({message: "Login failed. try again"})
+    // check if the password is correct.
+    const isValidPw: boolean = validatePassword(
+      incomingPassword,
+      foundUser.password
+    );
 
-}
+    if (isValidPw) {
+      // ! Issues a unique jwt for this user
+      const token = jwt.sign(
+        { userId: foundUser._id, email: foundUser.email }, // base64-compressed payload: anything you want
+        process.env.SECRET || "developmentSecret", // a secret only known to srv
+        { expiresIn: "24h" } // an expiry of the token
+      );
+
+      res.send({ message: "Login successful", token });
+    } else {
+      res
+        .status(401)
+        .send({ message: "Login failed. Check credentials and try again!" });
+    }
+  } catch (e) {
+    res
+      .status(401)
+      .send({ message: "Login failed. Check credentials and try again!" });
+  }
+};
+
+export async function getCurrentUser(req: Request, res: Response) {
+  console.log("res: ", req.currentUser);
+  try {
+    res.status(200).send(req.currentUser);
+  } catch (error) {
+    console.log(error);
+    res
+      .status(500)
+      .send({ message: "There was an error, please try again later." });
+  }
 }

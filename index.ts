@@ -1,39 +1,28 @@
-// TODO: make API server here
-
-import express from "express";
+import dotenv from 'dotenv'
+dotenv.config();
 import mongoose from "mongoose";
-import {Request, Response} from 'express'
-import {getFoods, getFoodById, createFood, deleteFood, updateFood, } from './controllers/foodController'
-import {createUser, login} from './controllers/userController'
+import express from "express";
+import cors from 'cors';
+import router from './config/router'
+
+
+
 const app = express();
-
-
-const router = express.Router();
-
-router.route('/api/foods').get(getFoods)
-router.route('/api/foods/:foodId').get(getFoodById)
-router.route('/api/foods').post(createFood)
-router.route('api/foods/:foodId').delete(deleteFood)
-router.route('/api/foods/:foodId').put(updateFood)
-
-router.route('/api/users').post(createUser)
-router.route ('api/login').post(login)
-
-
-
+app.use(cors())
 
 app.use(express.json());
+app.use('/api', router); // replacing the /api in the routes so instead of '/api/movies' we can have just '/movies'
 
-app.use(router);
 
+const dbURI= process.env.DB_URI || 'mongodb://127.0.0.1:27017/moviesdb'
 async function start() {
-  await mongoose.connect("mongodb://127.0.0.1:27017/foodsdb");
-  console.log("connected to the database!");
+  // ! Before we start express, we connect to the database.
+  await mongoose.connect(dbURI);
+  console.log("Connected to the database! 🔥");
 
-
-
-  app.listen(8002, () => {
-    console.log(" Express API is running on http://locahost:8002");
+  app.listen(process.env.PORT, () => {
+    console.log(`Express API is running on http://localhost:${process.env.PORT}`);
   });
 }
+
 start();
